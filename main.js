@@ -9,12 +9,15 @@ var main_state = {
 		this.game.stage.backgroundColor = '#71c5cf';
 		this.game.load.image('bird','assets/bird.png');
 		this.game.load.image('pipe','assets/pipe.png')
+        this.game.load.audio('jump', 'assets/jump.wav');  
 
     },
 
     create: function() { 
     	// Fuction called after 'preload' to setup the game  
+        this.jump_sound = this.game.add.audio('jump');  
     	this.bird = this.game.add.sprite(100,245,'bird');
+        this.bird.anchor.setTo(-0.2,0.5);
     	this.bird.body.gravity.y = 1000;
     	this.pipes = game.add.group();
     	this.pipes.createMultiple(20,'pipe');
@@ -41,11 +44,37 @@ var main_state = {
 		if(this.bird.inWorld == false)
 			this.restart_game();
 
-		this.game.physics.overlap(this.bird, this.pipes, this.restart_game, null, this);
+		this.game.physics.overlap(this.bird, this.pipes, this.hit_pipe, null, this);
+
+        if(this.bird.angle < 20)
+            this.bird.angle += 1;
+    },
+
+    hit_pipe:function(){
+        if (this.bird.alive == false)
+            return;
+        this.bird.alive = false;
+
+        this.game.time.events.remove(this.timer);
+
+        this.pipes.forEachAlive(function(p){
+            p.body.velocity = 0;
+        }, this);
+
+
     },
 
     jump:function(){
-    	this.bird.body.velocity.y = -200;
+        this.jump_sound.play();  
+        if(this.bird.alive == false)
+            return;
+
+
+    	this.bird.body.velocity.y = -300;
+
+        var animation = this.game.add.tween(this.bird);
+        animation.to({angle: -20}, 100);
+        animation.start();  
     },
 
     restart_game:function(){
